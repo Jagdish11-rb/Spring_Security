@@ -1,6 +1,7 @@
 package com.practice.SpringSecurity.Config;
 
-import com.practice.SpringSecurity.Filter.CsrfCookieFilter;
+import com.practice.SpringSecurity.Filter.*;
+import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -75,15 +76,26 @@ public class SecurityConfig {
                 .csrf((csrf)->csrf.csrfTokenRequestHandler(requestAttributeHandler).ignoringRequestMatchers("/register")
                         //By this configuration we are telling spring framework to generate CSRF token and save in the repository withHttpOnlyFalse(It will allow UI application to read our cookie.)
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-                //It is filter configuration provided in order to send csrf token in each and every request.
+                /**
+                 * Invoking our own custom filter
+                */
+                //This custom filter will send csrf token after the execution of BasicAuthenticationFilter.class
                 .addFilterAfter(new CsrfCookieFilter(),BasicAuthenticationFilter.class)
+                //This custom filter will validate request before the execution of BasicAuthenticationFilter.class
+                .addFilterBefore(new RequestValidationBeforeFilter(),BasicAuthenticationFilter.class)
+                //This custom filter will print a log after the execution of BasicAuthenticationFilter.class
+                .addFilterAfter(new AuthorityLogAfterFilter(),BasicAuthenticationFilter.class)
+                //This custom filter is for testing purpose extending GenericFilterBean
+                .addFilterAfter(new GenericFilter(),AuthorityLogAfterFilter.class)
+                //This custom filter will print a log at the time of execution of BasicAuthenticationFilter.class
+                .addFilterAt(new AuthenticatonAtFilter(),BasicAuthenticationFilter.class)
                         .authorizeHttpRequests((request)-> request
                         //All endpoints are in get mapping but requires request body as mentioned in contrller. Modify it.
                                 .requestMatchers("/myAccount","/myCards","/myLoans","/myBalance").authenticated()
                                 .requestMatchers("/test-account","/test-cards","/test-loans","/test-balance").authenticated()
                                 .requestMatchers("/notices","/contacts","/register").permitAll()
                                 .requestMatchers("/test-notices","/test-contacts","/test-register").permitAll()
-//                                .anyRequest().permitAll()
+                                .anyRequest().permitAll()
                         )
                 .httpBasic(Customizer.withDefaults())
                 .formLogin(Customizer.withDefaults());
