@@ -49,7 +49,12 @@ public class RequestValidationBeforeFilter implements Filter {
                 }else{
                     filterChain.doFilter(servletRequest,servletResponse);
                 }
+            }else{
+                logger.info("Unexpected token.");
             }
+        }else{
+            logger.info("Header value is null.");
+            filterChain.doFilter(servletRequest,servletResponse);
         }
     }
 }

@@ -24,9 +24,14 @@ public class AuthorityLogAfterFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.isAuthenticated()){
-            logger.info("An user with email : {} and authorities : {} reached us.",authentication.getName(),authentication.getAuthorities());
+        if(authentication!=null){
+            if(authentication.isAuthenticated()){
+                logger.info("An user with email : {} and authorities : {} reached us.",authentication.getName(),authentication.getAuthorities());
+            }
+        }else{
+            logger.info("Authenication is null.");
         }
+
         filterChain.doFilter(servletRequest,servletResponse);
     }
 

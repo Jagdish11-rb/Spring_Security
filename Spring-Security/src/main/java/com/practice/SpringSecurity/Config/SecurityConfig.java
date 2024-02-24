@@ -79,18 +79,22 @@ public class SecurityConfig {
                 /**
                  * Invoking our own custom filter
                 */
-                //This custom filter will send csrf token after the execution of BasicAuthenticationFilter.class
-                .addFilterAfter(new CsrfCookieFilter(),BasicAuthenticationFilter.class)
+
                 //This custom filter will validate request before the execution of BasicAuthenticationFilter.class
                 .addFilterBefore(new RequestValidationBeforeFilter(),BasicAuthenticationFilter.class)
+                //This custom filter will print a log at the time of execution of BasicAuthenticationFilter.class
+                .addFilterAt(new AuthenticatonAtFilter(),BasicAuthenticationFilter.class)
+                //This custom filter will send csrf token after the execution of BasicAuthenticationFilter.class
+                .addFilterAfter(new CsrfCookieFilter(),BasicAuthenticationFilter.class)
                 //This custom filter will print a log after the execution of BasicAuthenticationFilter.class
                 .addFilterAfter(new AuthorityLogAfterFilter(),BasicAuthenticationFilter.class)
                 //This custom filter is for testing purpose extending GenericFilterBean
                 .addFilterAfter(new GenericFilter(),AuthorityLogAfterFilter.class)
-                //This custom filter will print a log at the time of execution of BasicAuthenticationFilter.class
-                .addFilterAt(new AuthenticatonAtFilter(),BasicAuthenticationFilter.class)
+
+                /**
+                 * The below configuration is for authorizing http requests using request matchers.
+                 */
                         .authorizeHttpRequests((request)-> request
-                        //All endpoints are in get mapping but requires request body as mentioned in contrller. Modify it.
                                 .requestMatchers("/myAccount","/myCards","/myLoans","/myBalance").authenticated()
                                 .requestMatchers("/test-account","/test-cards","/test-loans","/test-balance").authenticated()
                                 .requestMatchers("/notices","/contacts","/register").permitAll()
