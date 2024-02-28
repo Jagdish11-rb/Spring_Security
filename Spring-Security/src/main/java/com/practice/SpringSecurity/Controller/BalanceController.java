@@ -1,6 +1,7 @@
 package com.practice.SpringSecurity.Controller;
 
 import com.practice.SpringSecurity.Entity.AccountTransactions;
+import com.practice.SpringSecurity.Entity.Accounts;
 import com.practice.SpringSecurity.Entity.Customer;
 import com.practice.SpringSecurity.Repository.AccountTransactionsRepository;
 import com.practice.SpringSecurity.Repository.CustomerRepository;
@@ -41,6 +42,17 @@ public class BalanceController {
             }else{
                 return new ResponseEntity<>("Can't view this page", HttpStatus.UNAUTHORIZED);
             }
+        }else {
+            return new ResponseEntity<>("Unable to fetch", HttpStatus.OK);
+        }
+    }
+
+    @GetMapping("/balance")
+    public ResponseEntity<?> getLoggedInUserAccountDetails(Authentication authentication) {
+        Customer customer = customerRepository.findByEmail(authentication.getName());
+        List<AccountTransactions> accountTransactions = accountTransactionsRepository.findByCustomerIdOrderByTransactionDtDesc(customer.getId());
+        if (accountTransactions != null ) {
+            return new ResponseEntity<>(accountTransactions, HttpStatus.OK);
         }else {
             return new ResponseEntity<>("Unable to fetch", HttpStatus.OK);
         }

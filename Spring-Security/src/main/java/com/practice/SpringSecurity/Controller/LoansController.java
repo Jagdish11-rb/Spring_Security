@@ -1,5 +1,6 @@
 package com.practice.SpringSecurity.Controller;
 
+import com.practice.SpringSecurity.Entity.Cards;
 import com.practice.SpringSecurity.Entity.Customer;
 import com.practice.SpringSecurity.Entity.Loans;
 import com.practice.SpringSecurity.Repository.CustomerRepository;
@@ -38,6 +39,17 @@ public class LoansController {
             }else{
                 return new ResponseEntity<>("Can't view this page", HttpStatus.UNAUTHORIZED);
             }
+        }else {
+            return new ResponseEntity<>("Unable to fetch", HttpStatus.OK);
+        }
+    }
+
+    @GetMapping("/loans")
+    public ResponseEntity<?> getLoggedInUserAccountDetails(Authentication authentication) {
+        Customer customer = customerRepository.findByEmail(authentication.getName());
+        List<Loans> loans = loanRepository.findByCustomerIdOrderByStartDtDesc(customer.getId());
+        if (loans != null ) {
+            return new ResponseEntity<>(loans, HttpStatus.OK);
         }else {
             return new ResponseEntity<>("Unable to fetch", HttpStatus.OK);
         }
