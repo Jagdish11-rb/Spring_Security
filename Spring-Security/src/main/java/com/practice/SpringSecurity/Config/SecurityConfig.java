@@ -93,7 +93,9 @@ public class SecurityConfig {
                 .addFilterAfter(new AuthorityLogAfterFilter(),BasicAuthenticationFilter.class)
                 //This custom filter is for testing purpose extending GenericFilterBean
                 .addFilterAfter(new GenericFilter(),AuthorityLogAfterFilter.class)
+                //This custom filter will generate a jwt for user after successful authentication of a customer in BasicAuthenticationFilter.class
                 .addFilterAfter(new JWTTokenGeneratorFilter(), BasicAuthenticationFilter.class)
+                //This custom filter will validate the incoming jwt after login
                 .addFilterBefore(new JWTTokenValidatorFilter(), BasicAuthenticationFilter.class)
 
                 /**
