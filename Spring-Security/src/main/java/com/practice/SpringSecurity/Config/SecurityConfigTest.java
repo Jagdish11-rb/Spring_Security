@@ -1,6 +1,7 @@
 package com.practice.SpringSecurity.Config;
 
 import com.practice.SpringSecurity.Component.CustomPasswordChecker;
+import com.practice.SpringSecurity.Exception.Handler.CustomAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -27,7 +28,9 @@ public class SecurityConfigTest extends CustomPasswordChecker {
                         .anyRequest().authenticated())
 
                 .formLogin(Customizer.withDefaults())
-                .httpBasic(Customizer.withDefaults());
+                .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(new CustomAuthenticationEntryPoint()))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
+
 
         return http.build();
     }

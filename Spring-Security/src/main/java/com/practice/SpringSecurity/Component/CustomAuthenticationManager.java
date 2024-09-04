@@ -18,6 +18,7 @@ public class CustomAuthenticationManager implements AuthenticationProvider {
 
     private final CustomUserDetails customUserDetails;
     private final PasswordEncoder passwordEncoder;
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
