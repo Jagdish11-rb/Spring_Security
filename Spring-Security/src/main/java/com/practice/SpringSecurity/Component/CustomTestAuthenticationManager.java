@@ -12,23 +12,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("!test")
+@Profile("test")
 @RequiredArgsConstructor
-public class CustomAuthenticationManager implements AuthenticationProvider {
+public class CustomTestAuthenticationManager implements AuthenticationProvider {
 
     private final CustomUserDetails customUserDetails;
     private final PasswordEncoder passwordEncoder;
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
-        String password = (String) authentication.getCredentials();
-
         UserDetails userDetails = customUserDetails.loadUserByUsername(username);
         if(userDetails==null){
             throw new UsernameNotFoundException("User not found with username : "+username);
-        }
-        if(!passwordEncoder.matches(password,userDetails.getPassword())){
-            throw new UsernameNotFoundException("Invalid password");
         }
         return new UsernamePasswordAuthenticationToken(userDetails.getUsername(),userDetails.getPassword(),userDetails.getAuthorities());
     }
