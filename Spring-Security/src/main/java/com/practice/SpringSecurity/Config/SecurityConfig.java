@@ -1,6 +1,7 @@
 package com.practice.SpringSecurity.Config;
 
 import com.practice.SpringSecurity.Component.CustomPasswordChecker;
+import com.practice.SpringSecurity.Exception.Handler.CustomAccessDeniedHandler;
 import com.practice.SpringSecurity.Exception.Handler.CustomAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,11 +26,12 @@ public class SecurityConfig extends CustomPasswordChecker {
                         .authenticated()
                         .requestMatchers("/test-contact", "/test-notice", "/create-user")
                         .permitAll()
-                        .anyRequest().authenticated())
+                        .anyRequest().authenticated());
 
-                .formLogin(Customizer.withDefaults())
-                .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(new CustomAuthenticationEntryPoint()))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
+                http.formLogin(Customizer.withDefaults());
+                http.httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
+                http.exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
+                http.exceptionHandling(ex -> ex.accessDeniedHandler(new CustomAccessDeniedHandler()));
 
         return http.build();
     }
