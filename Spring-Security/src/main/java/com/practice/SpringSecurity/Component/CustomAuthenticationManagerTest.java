@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Profile("test")
 @RequiredArgsConstructor
-public class CustomTestAuthenticationManager implements AuthenticationProvider {
+public class CustomAuthenticationManagerTest implements AuthenticationProvider {
 
     private final CustomUserDetails customUserDetails;
     private final PasswordEncoder passwordEncoder;

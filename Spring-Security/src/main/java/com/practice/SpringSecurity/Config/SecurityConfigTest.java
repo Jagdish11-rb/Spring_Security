@@ -11,13 +11,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@Profile("!test")
-public class SecurityConfig extends CustomPasswordChecker {
+@Profile("test")
+public class SecurityConfigTest extends CustomPasswordChecker {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .requiresChannel(rcc -> rcc.anyRequest().requiresSecure())
+                .requiresChannel(rcc -> rcc.anyRequest().requiresInsecure())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/test-account", "/test-balance", "/test-card", "test-loan")
