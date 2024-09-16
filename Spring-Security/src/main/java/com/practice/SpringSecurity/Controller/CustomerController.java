@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.password.CompromisedPasswordDecision;
 import org.springframework.security.authentication.password.CompromisedPasswordException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,20 +26,18 @@ public class CustomerController {
 
     @PostMapping("/create-user")
     public ResponseEntity<?> createUser(@RequestBody Customer customer) {
-        try {
-            CompromisedPasswordDecision compromisedPasswordDecision = customPasswordChecker.check(customer.getPassword());
-            if (compromisedPasswordDecision.isCompromised()) {
-                throw new CompromisedPasswordException("Provided password is compromised and can't be used.");
-            }
-            String password = passwordEncoder.encode(customer.getPassword());
-            customer.setPassword(password);
-            customerRepository.save(customer);
-            return new ResponseEntity<>("User created successfully.", HttpStatus.CREATED);
-        } catch (CompromisedPasswordException ce) {
-            return new ResponseEntity<>(ce.getMessage(), HttpStatus.NOT_ACCEPTABLE);
-        } catch(Exception e) {
-            return new ResponseEntity<>("Unable to create user .", HttpStatus.CONFLICT);
+        CompromisedPasswordDecision compromisedPasswordDecision = customPasswordChecker.check(customer.getPassword());
+        if (compromisedPasswordDecision.isCompromised()) {
+            throw new CompromisedPasswordException("Provided password is compromised and can't be used.");
         }
+        boolean isUsernameExists = customerRepository.existsByCustomerName(customer.getCustomerName());
+        if (isUsernameExists) {
+            throw new BadCredentialsException("User name already taken.");
+        }
+        String password = passwordEncoder.encode(customer.getPassword());
+        customer.setPassword(password);
+        customerRepository.save(customer);
+        return new ResponseEntity<>("User created successfully.", HttpStatus.CREATED);
     }
 
 }
