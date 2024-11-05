@@ -14,12 +14,13 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
         LocalDateTime timestamp = LocalDateTime.now();
-        String message = (accessDeniedException!=null && accessDeniedException.getMessage()!=null) ? accessDeniedException.getMessage() : "Unauthorized";
-        response.setHeader("Spring security denied response", "Chala jaa bsdk..");
+        String message = "Oops... Seems like you don't have access to this page.";
+        message = (accessDeniedException != null && accessDeniedException.getMessage() != null) ? message + accessDeniedException.getMessage() : message + " Access Denied.";
+        response.setHeader("Spring security denied response", "Access Denied.");
         response.setStatus(HttpStatus.FORBIDDEN.value());
 
         String responseJson = String.format(
-                "{\"timestamp\":\"%s\",\"status\":\"%s\",\"error\":\"%s\",\"message\":\"%s\",\"path\":\"%s\"}",timestamp,HttpStatus.FORBIDDEN.value(),HttpStatus.FORBIDDEN.getReasonPhrase(),message,request.getRequestURI()
+                "{\"timestamp\":\"%s\",\"status\":\"%s\",\"error\":\"%s\",\"message\":\"%s\",\"path\":\"%s\"}", timestamp, HttpStatus.FORBIDDEN.value(), HttpStatus.FORBIDDEN.getReasonPhrase(), message, request.getRequestURI()
         );
 
         response.getWriter().write(responseJson);

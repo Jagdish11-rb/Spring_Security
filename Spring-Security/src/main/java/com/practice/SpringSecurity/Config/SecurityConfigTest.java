@@ -22,9 +22,9 @@ public class SecurityConfigTest extends CustomPasswordChecker {
                 .requiresChannel(rcc -> rcc.anyRequest().requiresInsecure())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/test-account", "/test-balance", "/test-card", "test-loan")
+                        .requestMatchers("/test-account","/get-customer-details")
                         .authenticated()
-                        .requestMatchers("/test-contact", "/test-notice", "/create-user")
+                        .requestMatchers( "/create-user")
                         .permitAll()
                         .anyRequest().denyAll());
 

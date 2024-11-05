@@ -18,8 +18,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         LocalDateTime timestamp = LocalDateTime.now();
-        String message = (authException!=null && authException.getMessage()!=null) ? authException.getMessage() : "Unauthorized";
-        response.setHeader("Spring security error response", "Chal hatt bsdk..");
+        String message = (authException!=null && authException.getMessage()!=null) ? authException.getMessage() : "Unable to authenticate";
+        response.setHeader("Spring security error response", "You are marked as unauthenticated.");
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
 
         String responseJson = String.format(
