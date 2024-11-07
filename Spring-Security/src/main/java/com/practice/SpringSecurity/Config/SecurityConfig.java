@@ -21,18 +21,16 @@ public class SecurityConfig extends CustomPasswordChecker {
         http
                 .requiresChannel(rcc -> rcc.anyRequest().requiresSecure())
                 .csrf(csrf -> csrf.disable())
+                .sessionManagement(smc -> smc.invalidSessionUrl("/invalidSession").maximumSessions(1).maxSessionsPreventsLogin(true).expiredUrl("/expired"))
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/test-account", "/test-balance", "/test-card", "test-loan")
-                        .authenticated()
-                        .requestMatchers("/test-contact", "/test-notice", "/create-user")
-                        .permitAll()
+                        .requestMatchers("/test-account", "/get-customer-details").authenticated()
+                        .requestMatchers("/test-notice", "/create-user").permitAll()
                         .anyRequest().authenticated());
 
-                http.formLogin(Customizer.withDefaults());
-                http.httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
-                http.exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
-                http.exceptionHandling(ex -> ex.accessDeniedHandler(new CustomAccessDeniedHandler()));
-
+        http.formLogin(Customizer.withDefaults());
+        http.httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
+        http.exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
+//        http.exceptionHandling(ex -> ex.accessDeniedHandler(new CustomAccessDeniedHandler()));
         return http.build();
     }
 
@@ -53,8 +51,6 @@ public class SecurityConfig extends CustomPasswordChecker {
     public UserDetailsService userDetailsService(DataSource datasource) {
         return new JdbcUserDetailsManager(datasource);
     }*/
-
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();

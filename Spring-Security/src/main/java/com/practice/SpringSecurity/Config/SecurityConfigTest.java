@@ -21,18 +21,19 @@ public class SecurityConfigTest extends CustomPasswordChecker {
         http
                 .requiresChannel(rcc -> rcc.anyRequest().requiresInsecure())
                 .csrf(csrf -> csrf.disable())
+                .sessionManagement(smc->smc.sessionFixation(sfc->sfc.none())
+                        .invalidSessionUrl("/invalidSession").maximumSessions(1).maxSessionsPreventsLogin(true).expiredUrl("/expired"))
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/test-account","/get-customer-details")
-                        .authenticated()
-                        .requestMatchers( "/create-user")
-                        .permitAll()
+                        .requestMatchers("/test-account","/get-customer-details").authenticated()
+                        .requestMatchers( "/create-user","/test-notice","/invalidSession","/expired").permitAll()
                         .anyRequest().denyAll());
 
                 http.formLogin(Customizer.withDefaults());
+
                 http.httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
                 http.exceptionHandling(exc -> exc.accessDeniedHandler(new CustomAccessDeniedHandler()));
-                http.exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
-
+                /*By enabling below , it catches all the authentication exception of application . But the catch is , http default login page will not be displayed while testing through browser as it will throw the exception before it.*/
+//                http.exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
 
         return http.build();
     }

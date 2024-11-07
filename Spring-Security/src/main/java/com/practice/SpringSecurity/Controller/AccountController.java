@@ -18,19 +18,18 @@ public class AccountController {
     private CustomerRepository customerRepository;
 
     @GetMapping("/test-account")
-    public String testAccount(){
+    public String testAccount() {
         return "Welcome to account controller.";
     }
 
     @GetMapping("/get-customer-details")
-    public ResponseEntity<?> getDetails(Authentication authentication){
+    public ResponseEntity<?> getDetails(Authentication authentication) {
         String username = authentication.getName();
         Customer customer = customerRepository.findByCustomerName(username);
-        if(customer==null){
-            return new ResponseEntity<>("User not found with username : "+username, HttpStatus.CONFLICT);
+        if (customer == null) {
+            return new ResponseEntity<>("User not found with username : " + username, HttpStatus.CONFLICT);
         }
 
-        return new ResponseEntity<>(customer,HttpStatus.OK);
+        return new ResponseEntity<>(customer, HttpStatus.OK);
     }
-
 }
