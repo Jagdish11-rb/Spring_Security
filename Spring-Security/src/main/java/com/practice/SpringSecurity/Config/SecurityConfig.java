@@ -3,15 +3,21 @@ package com.practice.SpringSecurity.Config;
 import com.practice.SpringSecurity.Component.CustomPasswordChecker;
 import com.practice.SpringSecurity.Exception.Handler.CustomAccessDeniedHandler;
 import com.practice.SpringSecurity.Exception.Handler.CustomAuthenticationEntryPoint;
+import com.practice.SpringSecurity.Filter.CsrfTokenFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -23,7 +29,11 @@ public class SecurityConfig extends CustomPasswordChecker {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = new CsrfTokenRequestAttributeHandler();
+
         http
+                .securityContext(contextConfig->contextConfig.requireExplicitSave(false))
+                .sessionManagement(smc->smc.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 .cors(cc->cc.configurationSource(new CorsConfigurationSource() {
                     @Override
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
@@ -36,9 +46,10 @@ public class SecurityConfig extends CustomPasswordChecker {
                         return corsConfiguration;
                     }
                 }))
-                .requiresChannel(rcc -> rcc.anyRequest().requiresSecure())
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(smc -> smc.invalidSessionUrl("/invalidSession").maximumSessions(1).maxSessionsPreventsLogin(true).expiredUrl("/expired"))
+                .requiresChannel(rcc -> rcc.anyRequest().requiresInsecure())
+                .csrf(csrf->csrf.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                .addFilterAfter(new CsrfTokenFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/test-account", "/get-customer-details").authenticated()
                         .requestMatchers("/test-notice", "/create-user").permitAll()
@@ -46,8 +57,8 @@ public class SecurityConfig extends CustomPasswordChecker {
 
         http.formLogin(Customizer.withDefaults());
         http.httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
-        http.exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
-//        http.exceptionHandling(ex -> ex.accessDeniedHandler(new CustomAccessDeniedHandler()));
+//        http.exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
+        http.exceptionHandling(ex -> ex.accessDeniedHandler(new CustomAccessDeniedHandler()));
         return http.build();
     }
 
