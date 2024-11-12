@@ -3,15 +3,20 @@ package com.practice.SpringSecurity.Config;
 import com.practice.SpringSecurity.Component.CustomPasswordChecker;
 import com.practice.SpringSecurity.Exception.Handler.CustomAccessDeniedHandler;
 import com.practice.SpringSecurity.Exception.Handler.CustomAuthenticationEntryPoint;
+import com.practice.SpringSecurity.Filter.CsrfTokenFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -23,8 +28,12 @@ public class SecurityConfigTest extends CustomPasswordChecker {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = new CsrfTokenRequestAttributeHandler();
+
         http
-                .cors(cc->cc.configurationSource(new CorsConfigurationSource() {
+                .securityContext(contextConfig->contextConfig.requireExplicitSave(false))
+                .sessionManagement(smc->smc.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+                .cors(cc -> cc.configurationSource(new CorsConfigurationSource() {
                     @Override
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration corsConfiguration = new CorsConfiguration();
@@ -36,24 +45,36 @@ public class SecurityConfigTest extends CustomPasswordChecker {
                         return corsConfiguration;
                     }
                 }))
-
                 .requiresChannel(rcc -> rcc.anyRequest().requiresInsecure())
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(smc->smc.sessionFixation(sfc->sfc.none())
-                        .invalidSessionUrl("/invalidSession").maximumSessions(1).maxSessionsPreventsLogin(true).expiredUrl("/expired"))
+                .addFilterAfter(new CsrfTokenFilter(), BasicAuthenticationFilter.class)
+
+                //Session management
+                /*.sessionManagement(smc -> smc.sessionFixation(sfc -> sfc.none())
+                        .invalidSessionUrl("/invalidSession").maximumSessions(1).maxSessionsPreventsLogin(true).expiredUrl("/expired"))*/
+
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/test-account","/get-customer-details").authenticated()
-                        .requestMatchers( "/create-user","/test-notice","/invalidSession","/expired").permitAll()
-                        .anyRequest().denyAll());
+                        .requestMatchers("/test-account", "/get-customer-details","/csrf-testing").authenticated()
+                        .requestMatchers("/create-user", "/test-notice", "/invalidSession", "/expired").permitAll()
+                        .anyRequest().authenticated());
 
-                http.formLogin(Customizer.withDefaults());
+        configureCsrf(http);
 
-                http.httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
-                http.exceptionHandling(exc -> exc.accessDeniedHandler(new CustomAccessDeniedHandler()));
-                /*By enabling below , it catches all the authentication exception of application . But the catch is , http default login page will not be displayed while testing through browser as it will throw the exception before it.*/
+        http.formLogin(Customizer.withDefaults());
+
+        http.httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
+        http.exceptionHandling(exc -> exc.accessDeniedHandler(new CustomAccessDeniedHandler()));
+        /*By enabling below , it catches all the authentication exception of application . But the catch is , http default login page will not be displayed while testing through browser as it will throw the exception before it.*/
 //                http.exceptionHandling(ex -> ex.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
 
         return http.build();
+    }
+
+    public void configureCsrf(HttpSecurity http) throws Exception {
+        CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = new CsrfTokenRequestAttributeHandler();
+        http
+                .csrf(csrf->csrf.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
+                        .ignoringRequestMatchers("/create-user")
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
     }
 
     /**
@@ -73,8 +94,6 @@ public class SecurityConfigTest extends CustomPasswordChecker {
     public UserDetailsService userDetailsService(DataSource datasource) {
         return new JdbcUserDetailsManager(datasource);
     }*/
-
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();

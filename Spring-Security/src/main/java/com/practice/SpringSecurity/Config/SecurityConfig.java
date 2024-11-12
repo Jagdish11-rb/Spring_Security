@@ -29,7 +29,6 @@ public class SecurityConfig extends CustomPasswordChecker {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = new CsrfTokenRequestAttributeHandler();
 
         http
                 .securityContext(contextConfig->contextConfig.requireExplicitSave(false))
@@ -47,13 +46,13 @@ public class SecurityConfig extends CustomPasswordChecker {
                     }
                 }))
                 .requiresChannel(rcc -> rcc.anyRequest().requiresInsecure())
-                .csrf(csrf->csrf.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
                 .addFilterAfter(new CsrfTokenFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/test-account", "/get-customer-details").authenticated()
+                        .requestMatchers("/test-account", "/get-customer-details","/csrf-testing").authenticated()
                         .requestMatchers("/test-notice", "/create-user").permitAll()
                         .anyRequest().authenticated());
+
+        configureCsrf(http);
 
         http.formLogin(Customizer.withDefaults());
         http.httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
@@ -61,6 +60,15 @@ public class SecurityConfig extends CustomPasswordChecker {
         http.exceptionHandling(ex -> ex.accessDeniedHandler(new CustomAccessDeniedHandler()));
         return http.build();
     }
+
+    public void configureCsrf(HttpSecurity http) throws Exception {
+        CsrfTokenRequestAttributeHandler csrfTokenRequestAttributeHandler = new CsrfTokenRequestAttributeHandler();
+        http
+                .csrf(csrf->csrf.csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
+                        .ignoringRequestMatchers("/create-user")
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
+    }
+
 
     /**
      * Using InMemoryUserDetailsManager
