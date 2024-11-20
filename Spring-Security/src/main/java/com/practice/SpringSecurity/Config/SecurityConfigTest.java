@@ -4,6 +4,7 @@ import com.practice.SpringSecurity.Component.CustomPasswordChecker;
 import com.practice.SpringSecurity.Exception.Handler.CustomAccessDeniedHandler;
 import com.practice.SpringSecurity.Exception.Handler.CustomAuthenticationEntryPoint;
 import com.practice.SpringSecurity.Filter.CsrfTokenFilter;
+import com.practice.SpringSecurity.Filter.RequestValidatorFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,7 +48,7 @@ public class SecurityConfigTest extends CustomPasswordChecker {
                 }))
                 .requiresChannel(rcc -> rcc.anyRequest().requiresInsecure())
                 .addFilterAfter(new CsrfTokenFilter(), BasicAuthenticationFilter.class)
-
+                .addFilterBefore(new RequestValidatorFilter(),BasicAuthenticationFilter.class)
                 //Session management
                 /*.sessionManagement(smc -> smc.sessionFixation(sfc -> sfc.none())
                         .invalidSessionUrl("/invalidSession").maximumSessions(1).maxSessionsPreventsLogin(true).expiredUrl("/expired"))*/
